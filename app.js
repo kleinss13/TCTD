@@ -1,56 +1,265 @@
-'use strict';
-const $=s=>document.querySelector(s);
-const app=$('#app');
-const state={page:'home',step:0,config:JSON.parse(localStorage.getItem('tctd_config')||'null')||{activity:'internacional',vehicle:'tractora',distance:'larga',load:'general',km:'120000',priority:'equilibrio'},postal:'',brands:['Scania','Volvo','MAN'],origin:new URLSearchParams(location.search).get('ref')||'',offers:JSON.parse(localStorage.getItem('tctd_offers')||'null')||[{brand:'Scania',model:'R 460',price:'119000',power:'460',warranty:'24',delivery:'4',notes:'Ejemplo ficticio; comprobar equipamiento.'},{brand:'Volvo',model:'FH 500',price:'123500',power:'500',warranty:'36',delivery:'6',notes:'Ejemplo ficticio; comprobar equipamiento.'}],requests:JSON.parse(localStorage.getItem('tctd_requests')||'[]'),result:false};
-const save=()=>{localStorage.setItem('tctd_config',JSON.stringify(state.config));localStorage.setItem('tctd_offers',JSON.stringify(state.offers));localStorage.setItem('tctd_requests',JSON.stringify(state.requests));};
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money=n=>Number(n||0).toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0});
-const truck=`<svg viewBox="0 0 640 360" aria-label="Ilustración estilizada de una cabeza tractora con semirremolque" role="img"><defs><linearGradient id="body" x1="0" x2="1"><stop stop-color="#263e53"/><stop offset=".55" stop-color="#9bb5c7"/><stop offset="1" stop-color="#2d4558"/></linearGradient><linearGradient id="glass" x1="0" x2="1"><stop stop-color="#06111c"/><stop offset="1" stop-color="#3b6079"/></linearGradient></defs><path d="M22 279 Q210 248 610 290" fill="none" stroke="#6f889a" stroke-width="3" opacity=".4"/><path d="M55 124 L377 119 392 246 59 250 Z" fill="#1b2b3b" stroke="#8da6b8" stroke-width="3"/><path d="M65 136 L365 132 375 231 68 234Z" fill="url(#body)" opacity=".5"/><path d="M377 145 L449 145 493 105 545 111 583 169 588 249 378 251Z" fill="url(#body)" stroke="#b2c9d9" stroke-width="4"/><path d="M495 120 L538 125 567 169 464 169Z" fill="url(#glass)" stroke="#d3e0e8" stroke-width="3"/><path d="M464 177 L578 177 582 225 456 225Z" fill="#182b3b"/><path d="M475 186 L571 186 M475 196 L571 196 M475 206 L571 206 M475 216 L571 216" stroke="#a2baca" stroke-width="3"/><path d="M580 182 L600 188 600 218 582 222" fill="#c6d5dd"/><path d="M389 145 L389 240" stroke="#d4e2e9" stroke-width="4"/><path d="M80 250 L581 250" stroke="#d1e0e8" stroke-width="4"/><g fill="#0a131d" stroke="#8fa9bc" stroke-width="6"><circle cx="144" cy="257" r="32"/><circle cx="227" cy="257" r="32"/><circle cx="489" cy="257" r="33"/></g><g fill="#7b98ad"><circle cx="144" cy="257" r="12"/><circle cx="227" cy="257" r="12"/><circle cx="489" cy="257" r="12"/></g><path d="M77 145 L352 142" stroke="#c9d9e4" stroke-width="2" opacity=".6"/><text x="65" y="92" fill="#a6c1d2" font-family="Arial" font-size="17" letter-spacing="6">TRANSPORTE · DECISIÓN · CONFIANZA</text></svg>`;
-const nav=[['home','Inicio'],['config','Mi camión'],['request','Contactar'],['compare','Comparar'],['map','Mapa'],['dealer','Concesionarios'],['admin','Admin']];
-function go(p){state.page=p;render();window.scrollTo({top:0,behavior:'smooth'});}
-function layout(content){app.innerHTML=`<header><div class="header-in"><div class="brand" data-go="home"><div class="mark">T</div><div><div class="brand-name">TCTD</div><small>Tu camión · Tu dinero · Tu decisión</small></div></div><nav class="nav">${nav.map(([p,n])=>`<button data-go="${p}" class="${state.page===p?'active':''}">${n}</button>`).join('')}</nav></div></header><main class="container">${content}</main><footer class="footer">TCTD · Prototipo de demostración · Los datos y ofertas mostrados son ficticios. © ${new Date().getFullYear()}</footer><div class="mobile-tabs">${[['home','Inicio'],['config','Mi camión'],['request','Contactar'],['compare','Comparar'],['map','Mapa']].map(([p,n])=>`<button data-go="${p}" class="${state.page===p?'active':''}">${n}</button>`).join('')}</div>`;document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));}
-function home(){return `<section class="hero"><div><div class="eyebrow">La plataforma inteligente del transporte</div><h1>Decisiones más claras. <em>Negocios que avanzan.</em></h1><p class="lead">Descubre qué camión se adapta a tu actividad, contacta con concesionarios suscritos de tu zona y compara las ofertas con criterios objetivos.</p><div class="actions"><button class="btn primary" data-go="config">¿Qué camión necesito? →</button><button class="btn ghost" data-go="compare">Ya tengo ofertas</button></div><p class="hint" style="margin-top:22px">Independiente · Objetiva · Diseñada para profesionales</p></div><div class="visual">${truck}<span class="v-caption">INGENIERÍA · EFICIENCIA · TRANSPORTE</span></div></section><section class="section"><h2 class="section-title">Todo empieza con una buena decisión</h2><p class="section-sub">Herramientas para elegir tu camión y localizar concesionarios.</p><div class="grid"><div class="card"><div class="symbol">◎</div><h3>¿Qué camión necesito?</h3><p>Cuéntanos cómo trabajas. Te orientamos sobre la configuración que conviene estudiar.</p><button class="btn small" data-go="config">Empezar →</button></div><div class="card"><div class="symbol">▤</div><h3>Compara tus ofertas</h3><p>Contrasta precio, potencia, garantía, entrega y condiciones sin mezclar datos no equivalentes.</p><button class="btn small" data-go="compare">Comparar →</button></div><div class="card"><div class="symbol">⌖</div><h3>Mapa de concesionarios</h3><p>Explora las ubicaciones en el mapa, filtra por marca y prepara tu solicitud.</p><button class="btn small" data-go="map">Ver mapa →</button></div></div></section><section class="section panel"><div class="row"><div><span class="tag">Para concesionarios</span><h2 style="margin:10px 0">Una nueva vía para llegar a compradores reales</h2><p class="muted">QR personalizado, recepción de solicitudes y suscripción mensual. Sin comisión por venta.</p></div><button class="btn" data-go="dealer">Ver área profesional →</button></div></section>`;}
-const select=(id,label,options,value)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${options.map(([v,l])=>`<option value="${esc(v)}" ${v===value?'selected':''}>${esc(l)}</option>`).join('')}</select></div>`;
-function config(){const c=state.config;const steps=['Actividad','Vehículo','Uso','Resultado'];let body='';if(state.step===0)body=`<div class="form-grid">${select('activity','Actividad principal',[['internacional','Larga distancia / internacional'],['regional','Transporte regional'],['construccion','Construcción y obra'],['urbano','Distribución urbana'],['especial','Transporte especializado']],c.activity)}${select('load','Tipo de carga',[['general','Carga general'],['frigorifico','Frigorífico'],['portacoches','Portacoches'],['cisterna','Cisterna'],['aridos','Áridos / obra'],['otra','Otra']],c.load)}</div>`;if(state.step===1)body=`<div class="form-grid">${select('vehicle','Vehículo previsto',[['tractora','Cabeza tractora'],['rigido','Camión rígido'],['indeciso','Necesito orientación']],c.vehicle)}${select('distance','Tipo de ruta',[['larga','Larga distancia'],['mixta','Mixta'],['corta','Local / urbana']],c.distance)}</div>`;if(state.step===2)body=`<div class="form-grid"><div class="field"><label for="km">Kilómetros anuales aproximados</label><input id="km" type="number" min="0" max="500000" value="${esc(c.km)}"></div>${select('priority','Qué valoras más',[['equilibrio','Equilibrio de costes y prestaciones'],['precio','Precio de adquisición'],['consumo','Consumo y coste operativo'],['potencia','Prestaciones / potencia']],c.priority)}</div><div class="notice">Para recomendar ejes, MMA, batalla, potencia o carrocería con precisión harán falta más datos técnicos y normativos. Esta versión no certifica una configuración.</div>`;if(state.step===3){const kind=c.vehicle==='tractora'?'cabeza tractora':c.vehicle==='rigido'?'camión rígido':'vehículo por definir';body=`<div class="result"><span class="tag">Orientación inicial · Demo</span><h2 style="margin:9px 0">Estudia una configuración de ${kind}</h2><p>Actividad: <strong>${esc(({internacional:'larga distancia',regional:'transporte regional',construccion:'construcción',urbano:'distribución urbana',especial:'transporte especializado'})[c.activity])}</strong>. Carga: <strong>${esc(c.load)}</strong>. Kilometraje previsto: <strong>${esc(c.km)} km/año</strong>.</p><p>El siguiente paso es verificar masas, ejes, carrocería, condiciones de ruta, carga útil, normativa aplicable y equipamiento. TCTD no asigna potencias ni especificaciones sin esos datos.</p></div><div class="actions"><button class="btn primary" data-go="request">Ver empresas asignadas de presupuesto →</button><button class="btn" id="restart">Volver a empezar</button></div>`;}
-return `<div class="pagehead"><span class="tag">Asistente de compra</span><h1>¿Qué camión necesito?</h1><p class="muted">Un primer análisis de tus necesidades, paso a paso.</p></div><div class="layout"><div class="panel"><div class="steps">${steps.map((s,i)=>`<span class="step ${i===state.step?'current':''}">${i+1}. ${s}</span>`).join('')}</div><div class="bar"><div style="width:${(state.step+1)*25}%"></div></div>${body}${state.step<3?`<div class="actions"><button class="btn primary" id="next">Continuar →</button>${state.step>0?'<button class="btn ghost" id="back">Atrás</button>':''}</div>`:''}</div><aside class="panel"><h2>Un análisis responsable</h2><p class="muted">TCTD debe distinguir entre recomendaciones preliminares y datos técnicos confirmados.</p><div class="divider"></div><p>✓ Necesidades de transporte</p><p>✓ Comparación objetiva</p><p>✓ Información que falta por validar</p><p>✓ Solicitud de presupuestos</p><div class="notice">Versión de prueba: el motor técnico definitivo todavía no está conectado.</div></aside></div>`;}
-const partners=[
-{id:'itt-valles',name:'ITT Vallès · Ejemplo',brand:'Scania',kind:'camion',city:'Vallès',zones:['08'],lat:41.54,lng:2.21},
-{id:'volvo-bcn',name:'Distribuidor Volvo Barcelona · Ejemplo',brand:'Volvo',kind:'camion',city:'Barcelona',zones:['08'],lat:41.40,lng:2.15},
-{id:'man-bcn',name:'Distribuidor MAN Barcelona · Ejemplo',brand:'MAN',kind:'camion',city:'Barcelona',zones:['08'],lat:41.44,lng:2.19},
-{id:'scania-madrid',name:'Distribuidor Scania Madrid · Ejemplo',brand:'Scania',kind:'camion',city:'Madrid',zones:['28'],lat:40.44,lng:-3.69},
-{id:'mercedes-madrid',name:'Distribuidor Mercedes-Benz Madrid · Ejemplo',brand:'Mercedes-Benz',kind:'camion',city:'Madrid',zones:['28'],lat:40.39,lng:-3.68},
-{id:'remolques-valles',name:'Distribuidor Lecitrailer Vallès · Ejemplo',brand:'Lecitrailer',kind:'remolque',city:'Vallès',zones:['08'],lat:41.57,lng:2.15},
-{id:'remolques-bcn',name:'Distribuidor Schmitz Barcelona · Ejemplo',brand:'Schmitz Cargobull',kind:'remolque',city:'Barcelona',zones:['08'],lat:41.48,lng:2.08},
-{id:'remolques-madrid',name:'Distribuidor Krone Madrid · Ejemplo',brand:'Krone',kind:'remolque',city:'Madrid',zones:['28'],lat:40.47,lng:-3.74}
-];
-const vehicleBrands=['Scania','Volvo','Mercedes-Benz','MAN','DAF','Renault Trucks','Iveco'];
-const trailerBrands=['Lecitrailer','Schmitz Cargobull','Krone','Kögel','Lamberet'];
-let leadKind='camion',leadPostal='',leadBrands=['Scania'],leadMatches=[];
-function matching(cp,brand,kind){return partners.filter(d=>d.brand===brand&&d.kind===kind&&d.zones.some(z=>cp.startsWith(z)));}
-function request(){let brands=leadKind==='camion'?vehicleBrands:trailerBrands;return `<div class="pagehead"><span class="tag">Contactos comerciales · Demo</span><h1>Encuentra tu concesionario</h1><p class="muted">TCTD no solicita presupuestos: asigna tu contacto a cada empresa suscrita que cubra tu código postal. La empresa te llamará y gestionará la oferta directamente.</p></div><div class="layout"><div class="panel"><div class="form-grid"><div class="field"><label for="lead-kind">¿Qué necesitas?</label><select id="lead-kind"><option value="camion" ${leadKind==='camion'?'selected':''}>Camión</option><option value="remolque" ${leadKind==='remolque'?'selected':''}>Semirremolque</option></select></div><div class="field"><label for="lead-postal">Código postal</label><input id="lead-postal" inputmode="numeric" maxlength="5" placeholder="Ej. 08130" value="${esc(leadPostal)}"></div></div><h3>Marcas que quieres que te contacten</h3><div class="checks">${brands.map(b=>`<label class="check"><input class="lead-brand" type="checkbox" value="${esc(b)}" ${leadBrands.includes(b)?'checked':''}>${esc(b)}</label>`).join('')}</div><div class="actions"><button class="btn primary" id="lead-search">Ver concesionarios asignados →</button></div><div id="lead-matches"></div><div class="divider"></div><h3>Datos del comprador</h3><div class="form-grid"><div class="field"><label for="lead-name">Nombre de contacto</label><input id="lead-name" placeholder="Nombre y apellidos"></div><div class="field"><label for="lead-phone">Teléfono</label><input id="lead-phone" type="tel" placeholder="600 000 000"></div><div class="field"><label for="lead-email">Email</label><input id="lead-email" type="email" placeholder="nombre@empresa.es"></div><div class="field"><label for="lead-company">Empresa (opcional)</label><input id="lead-company" placeholder="Empresa de transporte"></div></div><div class="field"><label for="lead-notes">Necesidades (opcional)</label><textarea id="lead-notes" placeholder="Actividad, tipo de carga, vehículo o remolque..."></textarea></div><label class="check"><input id="lead-consent" type="checkbox"> Autorizo que los concesionarios que aparecen asignados contacten conmigo. Entiendo que en esta demostración no se envían mis datos fuera de este navegador.</label><div class="actions"><button class="btn primary" id="lead-submit">Simular envío de leads →</button></div><p class="hint">Demostración: no hay concesionarios conectados, no se envían correos ni se transmite información. Los datos de contacto NO se guardan; solo se conserva un registro anónimo local de la simulación.</p><div id="lead-message" aria-live="polite"></div></div><aside class="panel"><h2>Cómo funciona</h2><p class="muted">1. Seleccionas el producto, marcas y código postal.</p><p class="muted">2. TCTD identifica el concesionario suscrito asignado a cada marca y zona.</p><p class="muted">3. Autorizas el contacto. En la versión real, se envía un lead por empresa.</p><p class="muted">4. Los comerciales contactan contigo y te entregan sus ofertas.</p><p class="muted">5. Subes tú mismo las ofertas al comparador.</p><div class="divider"></div><span class="tag">QR de origen</span><p class="hint">${state.origin?'Acceso desde código: '+esc(state.origin):'Acceso directo a TCTD'}</p><div class="notice">Cobertura ficticia en la demo: CP 08xxx y 28xxx. Ejemplo 08130 + Scania → ITT Vallès (simulado). La cobertura real deberá validarse contrato a contrato.</div><button class="btn" data-go="compare">Ir al comparador →</button></aside></div>`;}
-function renderMatches(){const target=$('#lead-matches');if(!target)return;target.innerHTML=leadMatches.length?`<h3>Concesionarios asignados (${leadMatches.length})</h3>${leadMatches.map(d=>`<div class="map-location"><div><strong>${esc(d.name)}</strong><p class="hint">${esc(d.brand)} · ${esc(d.city)} · Asignación de prueba</p></div><span class="pill">Suscripción demo</span></div>`).join('')}`:'<div class="notice">No hay concesionarios de prueba suscritos para esas marcas y ese código postal. No se redirige el lead a otra zona.</div>';}
-function offerCard(o,i){return `<div class="offer"><div class="row"><h3>Oferta ${i+1}</h3><span class="pill">Datos de prueba</span></div><div class="form-grid"><div class="field"><label>Marca</label><input data-offer="${i}" data-key="brand" value="${esc(o.brand)}"></div><div class="field"><label>Modelo</label><input data-offer="${i}" data-key="model" value="${esc(o.model)}"></div><div class="field"><label>Precio sin IVA (€)</label><input type="number" min="0" data-offer="${i}" data-key="price" value="${esc(o.price)}"></div><div class="field"><label>Potencia (CV)</label><input type="number" min="0" data-offer="${i}" data-key="power" value="${esc(o.power)}"></div><div class="field"><label>Garantía (meses)</label><input type="number" min="0" data-offer="${i}" data-key="warranty" value="${esc(o.warranty)}"></div><div class="field"><label>Entrega (meses)</label><input type="number" min="0" data-offer="${i}" data-key="delivery" value="${esc(o.delivery)}"></div></div><div class="field"><label>Observaciones</label><textarea data-offer="${i}" data-key="notes">${esc(o.notes)}</textarea></div></div>`;}
-function compare(){const a=state.offers[0],b=state.offers[1];return `<div class="pagehead"><span class="tag">Comparador de ofertas</span><h1>Compara antes de decidir</h1><p class="muted">Introduce los datos de dos ofertas y visualiza sus diferencias. Puedes modificar los ejemplos.</p></div><div class="panel"><div class="upload"><strong>Documentos de oferta (solo demostración)</strong><p class="hint">Puedes seleccionar un PDF o imagen para ver su nombre, pero esta versión no lee ni analiza el contenido. No se sube a ningún servidor.</p><input id="docs" type="file" accept=".pdf,image/*" multiple><div id="files-selected" class="hint"></div></div><div class="offer-grid">${state.offers.map(offerCard).join('')}</div><div class="actions"><button class="btn primary" id="analyze">Comparar ofertas →</button><button class="btn ghost" id="reset-offers">Restaurar ejemplos</button></div>${state.result?`<div class="section"><h2 class="section-title">Resultado comparativo</h2><div class="table-wrap"><table><thead><tr><th>Concepto</th><th>${esc(a.brand)} ${esc(a.model)}</th><th>${esc(b.brand)} ${esc(b.model)}</th></tr></thead><tbody><tr><td>Precio sin IVA</td><td>${money(a.price)}</td><td>${money(b.price)}</td></tr><tr><td>Potencia</td><td>${esc(a.power)} CV</td><td>${esc(b.power)} CV</td></tr><tr><td>Garantía</td><td>${esc(a.warranty)} meses</td><td>${esc(b.warranty)} meses</td></tr><tr><td>Plazo de entrega</td><td>${esc(a.delivery)} meses</td><td>${esc(b.delivery)} meses</td></tr></tbody></table></div><div class="result" style="margin-top:22px"><strong>Resumen objetivo</strong><p>${Number(a.price)<Number(b.price)?`La oferta A cuesta ${money(Number(b.price)-Number(a.price))} menos.`:Number(b.price)<Number(a.price)?`La oferta B cuesta ${money(Number(a.price)-Number(b.price))} menos.`:'Ambas ofertas tienen el mismo precio.'} ${Number(a.power)>Number(b.power)?'La oferta A tiene más potencia.':Number(b.power)>Number(a.power)?'La oferta B tiene más potencia.':'Ambas declaran la misma potencia.'}</p><p>La mejor elección no puede establecerse solo con estos datos: faltan equipamiento detallado, consumo contrastable, condiciones de garantía, mantenimiento y adecuación al uso previsto.</p></div></div>`:''}</div>`;}
-const demoLocations=[
- {name:'Punto de demostración · Barcelona',city:'Barcelona',brand:'Scania',lat:41.3874,lng:2.1686,postal:'08001'},
- {name:'Punto de demostración · Madrid',city:'Madrid',brand:'Volvo',lat:40.4168,lng:-3.7038,postal:'28001'},
- {name:'Punto de demostración · Valencia',city:'Valencia',brand:'MAN',lat:39.4699,lng:-0.3763,postal:'46001'},
- {name:'Punto de demostración · Zaragoza',city:'Zaragoza',brand:'DAF',lat:41.6488,lng:-0.8891,postal:'50001'},
- {name:'Punto de demostración · Sevilla',city:'Sevilla',brand:'Iveco',lat:37.3891,lng:-5.9845,postal:'41001'},
- {name:'Punto de demostración · Bilbao',city:'Bilbao',brand:'Mercedes-Benz',lat:43.2630,lng:-2.9350,postal:'48001'}
-];
-let dealerMap=null;
-function map(){return `<div class="pagehead"><span class="tag">Red de concesionarios · Demo</span><h1>Mapa de concesionarios</h1><p class="muted">Explora el mapa y filtra por marca. Los puntos actuales son <strong>ubicaciones ficticias de demostración</strong>, no concesionarios reales. Se sustituirán por establecimientos verificados cuando exista la red de suscriptores.</p></div><div class="panel"><div class="form-grid"><div class="field"><label for="map-brand">Marca</label><select id="map-brand"><option value="">Todas las marcas</option>${[...new Set(demoLocations.map(d=>d.brand))].map(b=>`<option value="${b}">${b}</option>`).join('')}</select></div><div class="field"><label for="map-city">Ciudad</label><select id="map-city"><option value="">Todas las ciudades</option>${demoLocations.map(d=>`<option value="${d.city}">${d.city}</option>`).join('')}</select></div></div><div id="dealer-map" role="region" aria-label="Mapa interactivo de puntos de demostración"></div><p class="hint">Mapa basado en OpenStreetMap. Requiere conexión a Internet para cargar las teselas y la biblioteca cartográfica.</p><div id="map-results" class="map-results"></div><div class="actions"><button class="btn primary" data-go="request">Contactar con empresas →</button></div></div>`;}
-function setupMap(){const brand=document.querySelector('#map-brand'),city=document.querySelector('#map-city');function draw(){const filtered=demoLocations.filter(d=>(!brand.value||d.brand===brand.value)&&(!city.value||d.city===city.value));document.querySelector('#map-results').innerHTML=filtered.length?filtered.map(d=>`<div class="map-location"><div><strong>${esc(d.name)}</strong><p class="hint">${esc(d.brand)} · ${esc(d.city)} · CP ${esc(d.postal)} · Datos ficticios</p></div><button class="btn small map-select" data-postal="${d.postal}" data-brand="${d.brand}">Ver empresas asignadas</button></div>`).join(''):'<div class="empty">No hay puntos de demostración con esos filtros.</div>';document.querySelectorAll('.map-select').forEach(b=>b.onclick=()=>{state.postal=b.dataset.postal;state.brands=[b.dataset.brand];go('request')});if(dealerMap&&window.L){dealerMap.eachLayer(layer=>{if(layer instanceof L.Marker)dealerMap.removeLayer(layer)});const markers=filtered.map(d=>L.marker([d.lat,d.lng]).addTo(dealerMap).bindPopup(`<strong>${esc(d.name)}</strong><br>${esc(d.brand)} · ${esc(d.city)}<br><small>Ubicación ficticia</small>`));if(markers.length)dealerMap.fitBounds(L.featureGroup(markers).getBounds().pad(.3),{maxZoom:9});else dealerMap.setView([40.2,-3.7],5)}}brand.onchange=draw;city.onchange=draw;if(window.L){dealerMap=L.map('dealer-map',{scrollWheelZoom:false}).setView([40.2,-3.7],5);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(dealerMap);}else{document.querySelector('#dealer-map').innerHTML='<div class="map-fallback">No se ha podido cargar el mapa interactivo. Puedes consultar los puntos de demostración en la lista inferior.</div>'}draw()}
-function dealer(){const url=new URL(location.href);url.search='?ref=itt-valles';url.hash='';const link=url.toString();return `<div class="pagehead"><span class="tag">Área profesional · Demo</span><h1>Panel de concesionarios</h1><p class="muted">Suscripción, código QR y leads simulados en un único lugar.</p></div><div class="stat-grid"><div class="stat"><b>${state.requests.length}</b><span>Leads simulados en este navegador</span></div><div class="stat"><b>49 €</b><span>Tarifa fundadores propuesta / mes</span></div><div class="stat"><b>Demo</b><span>Estado de la suscripción</span></div></div><div class="layout"><div class="panel"><h2>Leads simulados</h2>${state.requests.length?`<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>CP</th><th>Vehículo</th><th>Marcas / destinatarios</th></tr></thead><tbody>${state.requests.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.postal)}</td><td>${esc(r.vehicle)}</td><td>${esc((r.dealers||r.brands).join(', '))}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Aún no hay solicitudes de prueba guardadas en este navegador.</div>'}<p class="hint">Los datos son locales, no se comparten entre dispositivos ni representan solicitudes comerciales reales.</p></div><aside class="panel"><h2>QR del concesionario</h2><p class="muted">Ejemplo de enlace con identificador de procedencia.</p><div class="qrbox"><img id="qr-image" alt="Código QR del enlace de demostración" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(link)}"></div><p class="hint" style="overflow-wrap:anywhere">${esc(link)}</p><button class="btn small" id="copy-link">Copiar enlace</button><p class="hint">El QR se genera mediante un servicio externo. Al publicarlo, sustituye el identificador de ejemplo por uno real.</p><div class="divider"></div><h3>Suscripción</h3><p class="muted">Estado: <span class="pill">Demostración</span></p><p class="hint">Los pagos y la facturación aún no están conectados.</p></aside></div>`;}
-function admin(){return `<div class="pagehead"><span class="tag">Acceso de administración · Solo demo</span><h1>Control de TCTD</h1><p class="muted">Una vista preliminar del panel interno para los dos socios.</p></div><div class="notice">Este panel NO tiene autenticación y NO debe usarse con datos reales. En producción estará protegido por roles y permisos del servidor.</div><div class="section stat-grid"><div class="stat"><b>${state.requests.length}</b><span>Leads simulados locales</span></div><div class="stat"><b>0</b><span>Concesionarios reales conectados</span></div><div class="stat"><b>0 €</b><span>Facturación real</span></div></div><div class="grid"><div class="card"><div class="symbol">▣</div><h3>Red comercial</h3><p>Alta de empresas, delegaciones, marcas y cobertura por código postal.</p></div><div class="card"><div class="symbol">◇</div><h3>Suscripciones</h3><p>Planes, pagos recurrentes, facturas y control de acceso.</p></div><div class="card"><div class="symbol">☷</div><h3>Calidad del análisis</h3><p>Revisión de documentos, errores, extracción y trazabilidad de comparaciones.</p></div></div><div class="section panel"><h2>Herramientas de demostración</h2><p class="muted">Borra las solicitudes guardadas en este navegador.</p><button class="btn ghost" id="clear-requests">Borrar solicitudes locales</button></div>`;}
-function render(){layout(({home,config,request,compare,map,dealer,admin})[state.page]());wire();}
-function wire(){if(state.page==='map')setupMap();if(state.page==='config'){const next=$('#next');if(next)next.onclick=()=>{const ids=state.step===0?['activity','load']:state.step===1?['vehicle','distance']:['km','priority'];ids.forEach(id=>state.config[id]=$('#'+id).value);save();state.step++;render();};const back=$('#back');if(back)back.onclick=()=>{state.step--;render();};const restart=$('#restart');if(restart)restart.onclick=()=>{state.step=0;render();};}if(state.page==='request'){
- $('#lead-kind').onchange=e=>{leadKind=e.target.value;leadBrands=[];leadMatches=[];render();};
- $('#lead-postal').oninput=e=>{leadPostal=e.target.value;leadMatches=[];$('#lead-matches').innerHTML='';};
- document.querySelectorAll('.lead-brand').forEach(el=>el.onchange=()=>{leadBrands=[...document.querySelectorAll('.lead-brand:checked')].map(x=>x.value);leadMatches=[];$('#lead-matches').innerHTML='';});
- $('#lead-search').onclick=()=>{const msg=$('#lead-message');if(!/^\d{5}$/.test(leadPostal)){msg.innerHTML='<p class="notice">Introduce un código postal de cinco dígitos.</p>';return;}if(!leadBrands.length){msg.innerHTML='<p class="notice">Selecciona al menos una marca.</p>';return;}leadMatches=leadBrands.flatMap(b=>matching(leadPostal,b,leadKind));msg.innerHTML='';renderMatches();};
- $('#lead-submit').onclick=()=>{const msg=$('#lead-message'),name=$('#lead-name').value.trim(),phone=$('#lead-phone').value.trim(),email=$('#lead-email').value.trim();if(!leadMatches.length){msg.innerHTML='<p class="notice">Primero comprueba los concesionarios asignados.</p>';return;}if(!name||!phone||!email||!/^\S+@\S+\.\S+$/.test(email)){msg.innerHTML='<p class="notice">Completa nombre, teléfono y email válidos.</p>';return;}if(!$('#lead-consent').checked){msg.innerHTML='<p class="notice">Debes autorizar expresamente el contacto.</p>';return;}const id='DEMO-'+Date.now().toString(36).toUpperCase();state.requests.unshift({id,date:new Date().toLocaleDateString('es-ES'),postal:leadPostal,vehicle:leadKind,brands:leadMatches.map(d=>d.brand),dealers:leadMatches.map(d=>d.name),origin:state.origin});save();msg.innerHTML='<div class="notice success"><strong>Simulación completada: '+leadMatches.length+' leads</strong><p>Referencia '+esc(id)+'. Destinatarios: '+leadMatches.map(d=>esc(d.name)).join(', ')+'.</p><p>No se ha enviado ningún dato a terceros.</p></div>';};
-}
-if(state.page==='compare'){document.querySelectorAll('[data-offer]').forEach(el=>el.oninput=()=>{state.offers[Number(el.dataset.offer)][el.dataset.key]=el.value;state.result=false;save();});$('#analyze').onclick=()=>{const valid=state.offers.every(o=>o.brand.trim()&&o.model.trim()&&['price','power','warranty','delivery'].every(k=>o[k]!==''&&Number(o[k])>=0));if(!valid){alert('Completa los campos numéricos y los nombres de las dos ofertas.');return;}state.result=true;render();};$('#reset-offers').onclick=()=>{localStorage.removeItem('tctd_offers');state.offers=[{brand:'Scania',model:'R 460',price:'119000',power:'460',warranty:'24',delivery:'4',notes:'Ejemplo ficticio.'},{brand:'Volvo',model:'FH 500',price:'123500',power:'500',warranty:'36',delivery:'6',notes:'Ejemplo ficticio.'}];state.result=false;save();render();};$('#docs').onchange=e=>{$('#files-selected').textContent=[...e.target.files].map(f=>f.name).join(' · ')+' — archivos seleccionados, no procesados';};}if(state.page==='dealer'){$('#copy-link').onclick=async()=>{const url=new URL(location.href);url.search='?ref=itt-valles';url.hash='';try{await navigator.clipboard.writeText(url.toString());$('#copy-link').textContent='Enlace copiado';}catch{prompt('Copia este enlace:',url.toString());}};}if(state.page==='admin'){$('#clear-requests').onclick=()=>{if(confirm('¿Borrar las solicitudes locales de demostración?')){state.requests=[];save();render();}};}}
-render();
+/* TCTD · interfaz. Rutas por hash (#/contact) para que el botón "Atrás" del móvil funcione.
+   Toda la lógica de datos vive en js/api.js. */
+(function () {
+  'use strict';
+  const T = window.TCTD, A = T.api;
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const money = n => Number(n).toLocaleString('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const KIND = { camion: 'Camión', remolque: 'Semirremolque' };
+  const main = $('#main');
+  const ref = new URLSearchParams(location.search).get('ref') || '';
+  const refDealer = T.dealers.find(d => d.id === ref);
+
+  /* ---------- Estado del asistente de contacto ---------- */
+  const fresh = () => ({ step: 1, kind: '', brands: [], postal: '', dealers: [], done: null });
+  const w = Object.assign(fresh(), A.draft.get());
+  if (refDealer && !w.kind) { w.kind = refDealer.kind; w.brands = [refDealer.brand]; }   // llegada por QR: saltamos el paso 1
+  if (w.kind) w.step = 2;
+  const go = h => { location.hash = '#/' + h; };
+
+  /* ---------- Navegación ---------- */
+  // Vista pública = cliente normal. Las rutas de ADMIN_NAV solo existen con sesión iniciada.
+  const NAV = [['home', 'Inicio', 'Inicio'], ['contact', 'Pedir ofertas', 'Ofertas'], ['compare', 'Comparar ofertas', 'Comparar'], ['map', 'Mapa', 'Mapa']];
+  const ADMIN_NAV = [['dealers', 'Concesionarios', 'Empresas'], ['account', 'Mi cuenta', 'Cuenta']];
+  const GUARDED = ADMIN_NAV.map(x => x[0]);
+  function renderNav(cur) {
+    const s = A.auth.session(), items = s ? NAV.concat(ADMIN_NAV) : NAV;
+    $('#nav').innerHTML = items.map(([k, l]) => `<a href="#/${k}" class="${k === cur ? 'on' : ''} ${k === 'contact' ? 'cta' : ''}">${l}</a>`).join('');
+    $('#tabs').innerHTML = items.map(([k, , t]) => `<a href="#/${k}" class="${k === cur ? 'on' : ''}">${t}</a>`).join('');
+    $('#auth').innerHTML = s ? `<a class="auth-btn ${cur === 'account' ? 'on' : ''}" href="#/account">👤 ${esc(s.user)}</a><button class="auth-out" id="logout">Salir</button>` : '<a class="auth-btn" href="#/login">Entrar</a>';
+  }
+
+  /* ---------- INICIO ---------- */
+  const homeView = async () => `
+    ${refDealer ? `<div class="banner">Has llegado desde <b>${esc(refDealer.name)}</b>. Pide tu oferta en 1 minuto.</div>` : ''}
+    <section class="hero">
+      <h1>Pide ofertas de camión o semirremolque a concesionarios de tu zona</h1>
+      <p class="lead">Elige marca y código postal. Te llaman solo los concesionarios que trabajan tu marca en tu zona.</p>
+      <div class="actions"><a class="btn primary" href="#/contact">Pedir ofertas gratis →</a><a class="btn ghost" href="#/compare">Ya tengo ofertas</a></div>
+      <div class="trust"><span>✓ Gratis</span><span>✓ Sin compromiso</span><span>✓ Solo tu zona y tu marca</span></div>
+    </section>
+    <h2>Así de fácil</h2>
+    <div class="steps3">
+      <div class="card"><div class="num">1</div><b>Dinos qué buscas</b><p class="muted">Camión o semirremolque, marcas y código postal.</p></div>
+      <div class="card"><div class="num">2</div><b>Te llaman</b><p class="muted">En ${T.config.responseTime} te contacta cada concesionario de tu zona.</p></div>
+      <div class="card"><div class="num">3</div><b>Tú decides</b><p class="muted">Compara las ofertas aquí y elige la mejor.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>¿Eres concesionario?</h2><p class="muted">Recibe contactos de compradores de tu zona y tu marca. Suscripción mensual, sin comisión por venta.</p><a class="btn sm" href="#/login">Acceder al área profesional</a></div>`;
+
+  /* ---------- PEDIR OFERTAS (asistente de 3 pasos) ---------- */
+  const dealerCard = d => `<div class="dealer"><div><b>${esc(d.name)}</b><span class="sub">${esc(d.brand)} · ${esc(d.city)}</span></div><span class="pill">Suscrito</span></div>`;
+  const bar = () => `<div class="progress">Paso ${w.step} de 3<div class="bar"><i style="width:${w.step * 33.4}%"></i></div></div>`;
+
+  async function contactView() {
+    if (w.done) return doneView();
+    if (w.step === 1) return `${bar()}<h1 tabindex="-1">¿Qué quieres comprar?</h1>
+      <div class="choices">${Object.entries(KIND).map(([k, l]) => `<button class="choice" data-kind="${k}"><span class="ico">${k === 'camion' ? '🚚' : '🚛'}</span><b>${l}</b></button>`).join('')}</div>`;
+    if (w.step === 2) return `${bar()}<h1 tabindex="-1">¿Qué marcas y dónde estás?</h1>
+      <p class="muted">Marca las que te interesan (puedes elegir varias).</p>
+      <div class="chips">${T.brands[w.kind].map(b => `<button class="chip" data-brand="${esc(b)}" aria-pressed="${w.brands.includes(b)}">${esc(b)}</button>`).join('')}</div>
+      <div class="field"><label for="postal">Tu código postal</label><input id="postal" class="postal" inputmode="numeric" autocomplete="postal-code" maxlength="5" placeholder="08130" value="${esc(w.postal)}"></div>
+      <div id="match" aria-live="polite"></div>
+      <div class="actions"><button class="btn ghost" id="back">← Atrás</button><button class="btn primary" id="next" disabled>Continuar →</button></div>`;
+    const names = w.dealers.map(d => `<b>${esc(d.name)}</b>`).join(', ');
+    return `${bar()}<h1 tabindex="-1">Último paso: ¿cómo te llamamos?</h1>
+      <div class="banner">${w.dealers.length ? `Te contactará${w.dealers.length > 1 ? 'n' : ''}: ${names}` : `Te avisaremos cuando haya concesionario de ${esc(w.brands.join(', '))} en el ${esc(w.postal)}.`}</div>
+      <div class="field"><label for="f-name">Nombre</label><input id="f-name" autocomplete="name" placeholder="Tu nombre"><p class="err" id="e-name"></p></div>
+      <div class="field"><label for="f-phone">Teléfono móvil</label><input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="600 123 456"><p class="err" id="e-phone"></p></div>
+      <div class="field"><label for="f-email">Email <span>(opcional)</span></label><input id="f-email" type="email" autocomplete="email" placeholder="nombre@empresa.es"><p class="err" id="e-email"></p></div>
+      <div class="field"><label for="f-notes">¿Algo que debamos saber? <span>(opcional)</span></label><input id="f-notes" placeholder="Ej. tractora para larga distancia"></div>
+      <label class="check"><input type="checkbox" id="f-consent"><span>Acepto que ${w.dealers.length ? 'los concesionarios indicados' : 'TCTD'} me contacten por teléfono o email sobre esta solicitud. Puedo retirar mi autorización cuando quiera. <span class="hint">Demo: tus datos no salen de este navegador. No uses datos reales.</span></span></label><p class="err" id="e-consent"></p>
+      <div id="send-error"></div>
+      <div class="actions"><button class="btn ghost" id="back">← Atrás</button><button class="btn primary" id="send">${w.dealers.length ? 'Enviar mi solicitud' : 'Avisadme'}</button></div>`;
+  }
+
+  let tok = 0;   // evita que una respuesta lenta pise a otra más reciente
+  async function updateMatch() {
+    const t = ++tok, box = $('#match'), next = $('#next');
+    if (!box) return;
+    A.draft.set({ kind: w.kind, brands: w.brands, postal: w.postal });
+    if (!/^\d{5}$/.test(w.postal) || !w.brands.length) {
+      w.dealers = []; next.disabled = true;
+      box.innerHTML = `<p class="hint">${!w.brands.length ? 'Elige al menos una marca.' : 'Escribe los 5 números de tu código postal.'}</p>`; return;
+    }
+    const [d, cov] = await Promise.all([A.findDealers({ kind: w.kind, brands: w.brands, postal: w.postal }), A.brandsCovering(w.kind, w.postal)]);
+    if (t !== tok) return;
+    w.dealers = d; next.disabled = false;
+    if (d.length) { next.textContent = 'Continuar →'; box.innerHTML = `<div class="alert ok"><b>✓ ${d.length} concesionario${d.length > 1 ? 's' : ''} de tu zona</b></div>${d.map(dealerCard).join('')}`; return; }
+    const others = cov.filter(b => !w.brands.includes(b));
+    next.textContent = 'Avisadme cuando haya →';
+    box.innerHTML = `<div class="alert warn"><b>Aún no hay concesionario de esas marcas en tu zona.</b>${others.length ? `<p>En tu zona sí trabajan: ${others.map(b => `<button class="chip" data-add="${esc(b)}">+ ${esc(b)}</button>`).join(' ')}</p>` : ''}<p>O deja tus datos y te avisamos cuando haya uno.</p></div>`;
+  }
+
+  async function send() {
+    const v = { name: $('#f-name').value.trim(), phone: $('#f-phone').value.replace(/[\s.\-]/g, '').replace(/^(\+34|0034)/, ''), email: $('#f-email').value.trim(), notes: $('#f-notes').value.trim() };
+    const e = {};
+    if (v.name.length < 2) e.name = 'Escribe tu nombre.';
+    if (!/^[6-9]\d{8}$/.test(v.phone)) e.phone = 'Escribe un teléfono de 9 números, por ejemplo 600 123 456.';
+    if (v.email && !/^\S+@\S+\.\S+$/.test(v.email)) e.email = 'Revisa el email.';
+    if (!$('#f-consent').checked) e.consent = 'Necesitamos tu autorización para poder contactarte.';
+    ['name', 'phone', 'email', 'consent'].forEach(k => { $('#e-' + k).textContent = e[k] || ''; const i = $('#f-' + k); if (i) i.setAttribute('aria-invalid', !!e[k]); });
+    const first = Object.keys(e)[0];
+    if (first) { $('#f-' + first).focus(); return; }
+    const btn = $('#send'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Enviando…'; $('#send-error').innerHTML = '';
+    try {
+      const r = await A.submitLead({ ...v, kind: w.kind, brands: w.brands, postal: w.postal, dealers: w.dealers, origin: ref });
+      w.done = { ...r, dealers: w.dealers }; A.draft.clear(); render();
+    } catch {
+      $('#send-error').innerHTML = '<div class="alert bad">No hemos podido enviar tu solicitud. Inténtalo de nuevo.</div>';
+      btn.disabled = false; btn.textContent = 'Enviar mi solicitud';
+    }
+  }
+
+  const doneView = () => {
+    const n = w.done.count;
+    return `<div class="card done"><div class="tick">✓</div><h1 tabindex="-1">${n ? '¡Solicitud enviada!' : '¡Te avisaremos!'}</h1><p class="muted">Referencia <b>${esc(w.done.ref)}</b></p>
+      <ol class="next-list">${n ? `<li><b>${n} concesionario${n > 1 ? 's' : ''}</b> ${n > 1 ? 'han recibido' : 'ha recibido'} tu solicitud.</li><li>Te llamarán en <b>${T.config.responseTime}</b>.</li><li>Cuando tengas sus ofertas, <b>compáralas aquí</b>.</li>` : `<li>Guardamos tu solicitud.</li><li>Te llamaremos cuando haya un concesionario en tu zona.</li>`}</ol>
+      <div class="actions" style="justify-content:center"><a class="btn primary" href="#/compare">Comparar ofertas</a><button class="btn" id="again">Nueva solicitud</button></div></div>`;
+  };
+
+  /* ---------- COMPARAR ---------- */
+  const offers = A.offers.get();
+  const FIELDS = [['name', 'Marca y modelo', 'text', 'Ej. Scania R 460'], ['price', 'Precio sin IVA (€)', 'number', '119000'], ['warranty', 'Garantía (meses)', 'number', '24'], ['delivery', 'Entrega (meses)', 'number', '4']];
+  const compareView = async () => `<h1 tabindex="-1">Compara tus ofertas</h1><p class="lead">Escribe los datos de cada oferta. El resultado aparece solo.</p>
+    <div class="offers">${offers.map((o, i) => `<div class="card"><h2>Oferta ${'AB'[i]}</h2>${FIELDS.map(([k, l, t, p]) => `<div class="field"><label>${l}</label><input data-offer="${i}" data-key="${k}" type="${t}" ${t === 'number' ? 'inputmode="decimal" min="0"' : ''} placeholder="${p}" value="${esc(o[k])}"></div>`).join('')}</div>`).join('')}</div>
+    <div id="cmp"></div><div class="actions"><button class="btn ghost sm" id="clear-offers">Borrar datos</button></div>`;
+  function cmpResult() {
+    const [a, b] = offers;
+    if (!(Number(a.price) > 0 && Number(b.price) > 0)) return '<p class="hint">Escribe el precio de las dos ofertas para ver la comparación.</p>';
+    const rows = [['price', 'Precio sin IVA', -1, v => money(v)], ['warranty', 'Garantía', 1, v => v + ' meses'], ['delivery', 'Plazo de entrega', -1, v => v + ' meses']];
+    const body = rows.map(([k, l, dir, f]) => {
+      const x = a[k], y = b[k], win = x !== '' && y !== '' && Number(x) !== Number(y) ? ((Number(x) - Number(y)) * dir > 0 ? 0 : 1) : -1;
+      const cell = (o, i) => `<td class="${win === i ? 'best' : ''}">${o[k] === '' ? '—' : f(o[k])}${win === i ? ' ✓' : ''}</td>`;
+      return `<tr><th scope="row">${l}</th>${cell(a, 0)}${cell(b, 1)}</tr>`;
+    }).join('');
+    const diff = Math.abs(a.price - b.price);
+    return `<div style="overflow-x:auto;margin-top:16px"><table><thead><tr><th></th><th>${esc(a.name || 'Oferta A')}</th><th>${esc(b.name || 'Oferta B')}</th></tr></thead><tbody>${body}</tbody></table></div>
+      <div class="alert ok">${diff ? `La oferta ${Number(a.price) < Number(b.price) ? 'A' : 'B'} es <b>${money(diff)}</b> más barata.` : 'Ambas ofertas cuestan lo mismo.'} ✓ marca la mejor en cada fila.</div>
+      <p class="hint">Antes de decidir, pregunta también por equipamiento, consumo, mantenimiento y condiciones de garantía.</p>`;
+  }
+
+  /* ---------- MAPA (Leaflet se carga solo al entrar aquí) ---------- */
+  let mapObj = null, leafletP;
+  const loadLeaflet = () => leafletP || (leafletP = new Promise((ok, ko) => {
+    const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.append(l);
+    const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; s.onload = ok; s.onerror = () => { leafletP = null; ko(); }; document.head.append(s);
+  }));
+  const mapView = async () => `<h1 tabindex="-1">Concesionarios</h1><p class="muted">Puntos de demostración (ficticios).</p>
+    <div class="field"><label for="map-brand">Marca</label><select id="map-brand"><option value="">Todas</option>${[...new Set(T.dealers.map(d => d.brand))].map(b => `<option>${esc(b)}</option>`).join('')}</select></div>
+    <div id="dealer-map"></div><div id="map-list"></div>`;
+  async function mountMap() {
+    const sel = $('#map-brand'); let layer = null;
+    const draw = () => {
+      const list = T.dealers.filter(d => !sel.value || d.brand === sel.value);
+      $('#map-list').innerHTML = list.map(d => `<div class="dealer"><div><b>${esc(d.name)}</b><span class="sub">${KIND[d.kind]} · ${esc(d.brand)} · ${esc(d.city)}</span></div><button class="btn sm primary" data-pick="${d.id}">Pedir oferta</button></div>`).join('');
+      if (mapObj && layer) { layer.clearLayers(); list.forEach(d => L.marker([d.lat, d.lng]).addTo(layer).bindPopup(`<b>${esc(d.name)}</b>`)); if (list.length) mapObj.fitBounds(L.latLngBounds(list.map(d => [d.lat, d.lng])).pad(.4), { maxZoom: 9 }); }
+    };
+    sel.onchange = draw; draw();
+    try {
+      await loadLeaflet(); if (!$('#dealer-map')) return;
+      mapObj = L.map('dealer-map', { scrollWheelZoom: false }).setView([40.4, -3.7], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(mapObj);
+      layer = L.layerGroup().addTo(mapObj); draw();
+    } catch { const m = $('#dealer-map'); if (m) m.outerHTML = '<p class="hint">No se pudo cargar el mapa. Usa la lista.</p>'; }
+  }
+
+  /* ---------- CONCESIONARIOS (bandeja de leads + QR) ---------- */
+  let cur = refDealer ? refDealer.id : T.dealers[0].id;
+  const ST = { nuevo: 'Nuevo', contactado: 'Contactado', cerrado: 'Cerrado' };
+  async function dealersView() {
+    const leads = await A.listLeads(cur);
+    const link = location.origin === 'null' || location.protocol === 'file:' ? location.href.split(/[?#]/)[0] + '?ref=' + cur + '#/contact' : location.origin + location.pathname + '?ref=' + cur + '#/contact';
+    return `<h1 tabindex="-1">Área de concesionarios</h1>
+      <p class="muted">Suscripción mensual (propuesta fundadores: 49 €/mes), sin comisión por venta. Vista de demostración.</p>
+      <div class="field"><label for="dealer-sel">Concesionario</label><select id="dealer-sel">${T.dealers.map(d => `<option value="${d.id}" ${d.id === cur ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="stats"><div class="stat"><b>${leads.filter(l => l.status === 'nuevo').length}</b>Leads nuevos</div><div class="stat"><b>${leads.length}</b>Leads en total</div></div>
+      <h2>Tus leads</h2>
+      ${leads.length ? leads.map(l => `<div class="lead-card ${l.status}"><div class="row"><b>${esc(l.name)}</b><span class="pill ${l.status}">${ST[l.status] || l.status}</span></div>
+        <p>${KIND[l.kind]} ${esc(l.brand)} · CP ${esc(l.postal)} · ${new Date(l.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</p>${l.notes ? `<p class="muted">“${esc(l.notes)}”</p>` : ''}
+        <div class="btns"><a class="btn sm primary" href="tel:+34${esc(l.phone)}">📞 Llamar</a><a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/34${esc(l.phone)}">WhatsApp</a>
+        ${l.status === 'nuevo' ? `<button class="btn sm ghost" data-status="contactado" data-id="${esc(l.id)}">Marcar contactado</button>` : l.status === 'contactado' ? `<button class="btn sm ghost" data-status="cerrado" data-id="${esc(l.id)}">Marcar cerrado</button>` : ''}</div></div>`).join('')
+        : '<div class="card"><p class="muted">Aún no tienes leads. Haz una solicitud de prueba o carga ejemplos.</p><button class="btn sm" id="seed">Cargar 3 leads de ejemplo</button></div>'}
+      <div class="card"><h2>Tu código QR</h2><p class="muted">Ponlo en tu nave o en tus anuncios: el comprador entra con tu marca ya elegida.</p>
+        <div class="qr"><img alt="QR del concesionario" width="170" height="170" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(link)}"></div>
+        <p class="hint" style="overflow-wrap:anywhere">${esc(link)}</p><button class="btn sm" id="copy">Copiar enlace</button></div>
+      <p><button class="btn sm ghost" id="wipe">Borrar datos de la demo</button></p>`;
+  }
+
+  /* ---------- LOGIN (opcional) y MI CUENTA ---------- */
+  const loginView = async () => `<h1 tabindex="-1">Entrar</h1>
+    <p class="muted">Opcional: solo para concesionarios y administración. Para pedir ofertas no necesitas cuenta.</p>
+    <form id="login-form" class="card" novalidate>
+      <div class="field"><label for="l-user">Usuario</label><input id="l-user" autocomplete="username" autocapitalize="none" required></div>
+      <div class="field"><label for="l-pass">Contraseña</label><input id="l-pass" type="password" autocomplete="current-password" required></div>
+      <p class="err" id="l-err" role="alert"></p>
+      <div class="actions"><button class="btn primary" id="l-btn" type="submit">Entrar</button><a class="btn ghost" href="#/home">Volver</a></div>
+    </form>`;
+  const ST2 = { ...ST, espera: 'En espera' };
+  async function accountView() {
+    const s = A.auth.session(), leads = await A.allLeads(), n = st => leads.filter(l => l.status === st).length;
+    const dn = id => (T.dealers.find(d => d.id === id) || {}).name || 'En espera de cobertura';
+    return `<h1 tabindex="-1">Mi cuenta · ${esc(s.user)}</h1><p class="muted">Vista de administración (demo). Aquí ves todos los leads, de todos los concesionarios.</p>
+      <div class="stats"><div class="stat"><b>${leads.length}</b>Leads totales</div><div class="stat"><b>${n('nuevo')}</b>Nuevos</div><div class="stat"><b>${n('contactado')}</b>Contactados</div><div class="stat"><b>${n('espera')}</b>Sin cobertura</div></div>
+      <div class="actions" style="margin:0 0 18px"><a class="btn primary" href="#/dealers">Área de concesionarios</a><button class="btn" id="logout2">Cerrar sesión</button></div>
+      <h2>Todos los leads</h2>
+      ${leads.length ? `<div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Producto</th><th>Destino</th><th>Estado</th></tr></thead><tbody>${leads.map(l => `<tr><td>${new Date(l.createdAt).toLocaleDateString('es-ES')}</td><td>${esc(l.name)}</td><td><a href="tel:+34${esc(l.phone)}">${esc(l.phone)}</a></td><td>${KIND[l.kind]} ${esc(l.brand)}<br><span class="hint">CP ${esc(l.postal)}</span></td><td>${esc(dn(l.dealerId))}</td><td><span class="pill ${l.status}">${ST2[l.status] || l.status}</span></td></tr>`).join('')}</tbody></table></div>`
+        : '<div class="card"><p class="muted">Aún no hay leads. Haz una solicitud de prueba como cliente (cierra sesión o abre otra pestaña) y aparecerá aquí.</p></div>'}
+      <p style="margin-top:18px"><button class="btn sm ghost" id="wipe">Borrar datos de la demo</button></p>`;
+  }
+
+  /* ---------- Render y eventos ---------- */
+  const views = { home: homeView, contact: contactView, compare: compareView, map: mapView, dealers: dealersView, login: loginView, account: accountView };
+  let rt = 0;
+  async function render() {
+    const t = ++rt, hash = location.hash.replace(/^#\/?/, ''), name = views[hash] ? hash : 'home', logged = !!A.auth.session();
+    if (GUARDED.includes(name) && !logged) return location.replace('#/login');   // áreas internas: requieren sesión
+    if (name === 'login' && logged) return location.replace('#/account');
+    if (mapObj) { mapObj.remove(); mapObj = null; }
+    const html = await views[name](); if (t !== rt) return;
+    main.innerHTML = html; renderNav(name); window.scrollTo(0, 0);
+    const h = $('h1', main); if (h) h.focus({ preventScroll: true });
+    if (name === 'contact' && !w.done && w.step === 2) updateMatch();
+    if (name === 'compare') $('#cmp').innerHTML = cmpResult();
+    if (name === 'map') mountMap();
+  }
+  window.addEventListener('hashchange', render);
+
+  main.addEventListener('click', async ev => {
+    const el = ev.target.closest('button'); if (!el) return;
+    if (el.dataset.kind) { w.kind = el.dataset.kind; w.brands = []; w.step = 2; return render(); }
+    if (el.dataset.brand) { const b = el.dataset.brand; w.brands = w.brands.includes(b) ? w.brands.filter(x => x !== b) : [...w.brands, b]; el.setAttribute('aria-pressed', w.brands.includes(b)); return updateMatch(); }
+    if (el.dataset.add) { w.brands.push(el.dataset.add); return render(); }
+    if (el.dataset.pick) { const d = T.dealers.find(x => x.id === el.dataset.pick); Object.assign(w, fresh(), { kind: d.kind, brands: [d.brand], step: 2 }); return go('contact'); }
+    if (el.dataset.status) { await A.setStatus(el.dataset.id, el.dataset.status); return render(); }
+    switch (el.id) {
+      case 'next': w.step = 3; return render();
+      case 'back': w.step = w.step === 3 ? 2 : 1; if (w.step === 1) { w.kind = ''; w.brands = []; } return render();
+      case 'send': return send();
+      case 'again': Object.assign(w, fresh()); return render();
+      case 'seed': await A.seedDemo(cur); return render();
+      case 'copy': { const u = $('.qr + .hint').textContent; try { await navigator.clipboard.writeText(u); el.textContent = '✓ Copiado'; } catch { prompt('Copia este enlace:', u); } return; }
+      case 'clear-offers': offers.forEach(o => Object.keys(o).forEach(k => (o[k] = ''))); A.offers.set(offers); return render();
+      case 'wipe': if (confirm('¿Borrar todos los datos de la demo en este navegador?')) { A.clearAll(); Object.assign(w, fresh()); offers.forEach(o => Object.keys(o).forEach(k => (o[k] = ''))); render(); } return;
+    }
+  });
+  main.addEventListener('input', ev => {
+    const el = ev.target;
+    if (el.id === 'postal') { w.postal = el.value = el.value.replace(/\D/g, '').slice(0, 5); updateMatch(); }
+    if (el.dataset.offer !== undefined) { offers[+el.dataset.offer][el.dataset.key] = el.value; A.offers.set(offers); $('#cmp').innerHTML = cmpResult(); }
+  });
+  main.addEventListener('submit', async ev => {
+    if (ev.target.id !== 'login-form') return;
+    ev.preventDefault();
+    const b = $('#l-btn'), err = $('#l-err'); err.textContent = ''; b.disabled = true; b.innerHTML = '<span class="spin"></span> Entrando…';
+    const s = await A.auth.login($('#l-user').value, $('#l-pass').value);
+    if (s) return go('account');
+    err.textContent = 'Usuario o contraseña incorrectos.'; b.disabled = false; b.textContent = 'Entrar'; $('#l-pass').value = ''; $('#l-pass').focus();
+  });
+  const logout = () => { A.auth.logout(); location.hash = '#/home'; render(); };   // vuelve a la vista de cliente
+  $('#auth').addEventListener('click', ev => { if (ev.target.id === 'logout') logout(); });
+  main.addEventListener('click', ev => { if (ev.target.id === 'logout2') logout(); });
+  main.addEventListener('change', ev => { if (ev.target.id === 'dealer-sel') { cur = ev.target.value; render(); } });
+
+  render();
+})();
