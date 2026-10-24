@@ -1,13 +1,13 @@
 # TCTD · Demo v4 — Pide ofertas a concesionarios de tu zona
 
-Prototipo estático (HTML + CSS + JS, sin build). Publicar en GitHub Pages: sube **el contenido** del ZIP a la raíz del repo → Settings → Pages → rama `main` `/(root)`.
+Prototipo estático (HTML + CSS + JS, sin build). Publicar en GitHub Pages: sube **los 3 archivos** (`index.html`, `styles.css`, `app.js`) a la raíz del repo → Settings → Pages → rama `main` `/(root)`.
 
 ## Estructura
-- `index.html` · esqueleto y orden de scripts
+- `index.html` · esqueleto
 - `styles.css` · tema claro azul marino + gris, mobile-first
-- `js/data.js` · concesionarios, marcas y coberturas (ficticios)
-- `js/api.js` · **única capa de datos**. Hoy `localStorage`; para producción, cambiar cada función por `fetch('/api/...')`
-- `js/app.js` · interfaz y rutas (`#/contact`, `#/compare`, `#/map`, `#/dealers`)
+- `app.js` · tres secciones: 1) datos ficticios, 2) **api** (única capa de datos; para producción cambiar cada función por `fetch('/api/...')`), 3) interfaz y rutas (`#/contact`, `#/compare`, `#/map`, `#/dealers`, `#/account`)
+
+Si la página se queda en "Cargando…", falta algún archivo en la raíz del repo o el navegador tiene la versión anterior en caché (Ctrl+F5).
 
 ## Login opcional
 Botón **Entrar** en la cabecera: usuario `admin`, contraseña `admin`. Sin sesión, la app es la de un cliente normal (sin Concesionarios ni Mi cuenta). Con sesión aparecen *Concesionarios* y *Mi cuenta* (todos los leads). Es solo demo: las credenciales viven en el código; en producción, login en servidor (`api.auth.login`).
