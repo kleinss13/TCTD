@@ -1,25 +1,26 @@
-# TCTD · Demo v4 — Pide ofertas a concesionarios de tu zona
+# TCTD · Tu camión, tu dinero, tu decisión
 
-Prototipo estático (HTML + CSS + JS, sin build). Publicar en GitHub Pages: sube **los 3 archivos** (`index.html`, `styles.css`, `app.js`) a la raíz del repo → Settings → Pages → rama `main` `/(root)`.
+Aplicación web estática (HTML + CSS + JS, sin build) que conecta a transportistas con concesionarios de camión y semirremolque por **marca + cobertura postal**. Versión de demostración: todo se guarda en el navegador.
+
+## Publicar en GitHub Pages
+1. Sube **los 3 archivos** (`index.html`, `styles.css`, `app.js`) a la raíz del repositorio. Sin carpetas: así la subida desde la web de GitHub no falla. `.nojekyll` es opcional.
+2. Settings → Pages → Branch `main` → `/(root)`.
+3. Si ves "Cargando…", recarga con Ctrl+F5.
 
 ## Estructura
 - `index.html` · esqueleto
-- `styles.css` · tema claro azul marino + gris, mobile-first
-- `app.js` · tres secciones: 1) datos ficticios, 2) **api** (única capa de datos; para producción cambiar cada función por `fetch('/api/...')`), 3) interfaz y rutas (`#/contact`, `#/compare`, `#/map`, `#/dealers`, `#/account`)
+- `styles.css` · tema azul marino, gris, negro y blanco con detalle ámbar; mobile-first
+- `app.js` · tres secciones marcadas: 1) datos ficticios, 2) **api** (única capa de datos; para producción, sustituir cada función por `fetch('/api/...')`), 3) interfaz y rutas
 
-Si la página se queda en "Cargando…", falta algún archivo en la raíz del repo o el navegador tiene la versión anterior en caché (Ctrl+F5).
+## Cómo probar
+1. **Comprador**: Inicio → Camión → Scania → CP `08130` → nombre, móvil `611222333`, consentimiento → Enviar.
+2. **Concesionario**: *Concesionarios* → "Entrar como concesionario demo" (`concesionario` / `demo`). Verás el lead recién creado, métricas, gráfico, suscripción y QR.
+3. **Administración**: `admin` / `admin`; selector para ver todos o cada concesionario.
+4. **Sin cobertura**: CP `46001` + Scania → sugiere marcas de la zona o lista de espera.
+5. **QR**: `index.html?ref=volvo-bcn` entra con Volvo ya elegido.
 
-## Login opcional
-Botón **Entrar** en la cabecera: usuario `admin`, contraseña `admin`. Sin sesión, la app es la de un cliente normal (sin Concesionarios ni Mi cuenta). Con sesión aparecen *Concesionarios* y *Mi cuenta* (todos los leads). Es solo demo: las credenciales viven en el código; en producción, login en servidor (`api.auth.login`).
+## Reglas de negocio
+Asignación por marca + cobertura postal + suscripción activa, nunca por cercanía. Un lead independiente por concesionario, con consentimiento explícito. Sin comisión por venta. Se evitan duplicados (mismo teléfono y concesionario en 24 h).
 
-## Prueba rápida
-1. *Pedir ofertas* → Camión → Scania → CP `08130` → aparece ITT Vallès → nombre, móvil `600123456`, autorización → Enviar.
-2. *Concesionarios* → elige ITT Vallès → ves el lead con Llamar / WhatsApp / Marcar contactado.
-3. CP `46001` + Scania → sin cobertura: sugiere marcas de la zona o lista de espera.
-4. Abre `index.html?ref=volvo-bcn` (simula el QR): entra con Volvo ya elegido.
-
-## Reglas de negocio (sin cambios)
-Asignación por marca + cobertura postal + suscripción activa, nunca por cercanía. Un lead independiente por concesionario, con consentimiento explícito. Sin comisión por venta.
-
-## Limitaciones
-Sin envío real, cuentas, pagos ni base de datos. Datos solo en el navegador del usuario. Mapa y QR requieren Internet. Cobertura de ejemplo: CP 08 y 28.
+## Antes de producción
+Credenciales y datos viven en el cliente: hay que añadir login en servidor, base de datos, envío real de avisos (email/WhatsApp) y política de privacidad (RGPD).
